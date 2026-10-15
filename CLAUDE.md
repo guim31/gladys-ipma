@@ -11,13 +11,19 @@ Gladys through
 [`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js),
 its only runtime dependency. It started from the official JavaScript template.
 
+This one brings the official weather of Portugal from **IPMA** (`api.ipma.pt`,
+open data, no account): one read-only device per IPMA location, the
+`warning_issued` scene trigger and the `forecast` widget.
+
 ## Commands
 
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/device.test.js           # one file
+node --test --test-name-pattern "widget"  # tests whose name matches
+node scripts/probe.mjs Aveiro             # real IPMA data of a location (needs Internet)
+node scripts/build-locations.mjs          # regenerate the location table + manifest select
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +37,23 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only: createApp() on the real client, then connect()
+src/app.js                        handlers (scan, config, actions, widget), the configuration
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/ipma.js                       IPMA client and parsers (-99 = no value)
+src/locations.js                  the 423 IPMA locations; src/locations-data.js is GENERATED
+src/snapshot.js                   pure: what a location shows now, from the parsed files
+src/device.js                     the device, its features (keys are forever) and their states
+src/refresher.js                  the container's own timer, file caches, onPoll fallback
+src/warnings.js                   the `warning_issued` trigger, announced warnings kept in /data
+src/widgets.js                    the `forecast` widget (pure builder)
+src/actions.js                    configuration buttons (`nearest_location`, `check`)
+src/codes.js, src/i18n.js         IPMA codes and every text, in en/fr/de/es
+src/issues.js, src/time.js        logged-once failures; Portuguese local times
+scripts/probe.mjs                 the real data of a location through the real code
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (same sections)
+test/                             node --test, on the SDK's fake Gladys and test/fixtures/ipma
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +83,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German ("du") and Spanish
+  ("usted"): action messages, manifest texts, feature names, widget texts and
+  `docs/{en,fr,de,es}.md` with the same sections. `test/i18n.test.js` checks it.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +247,39 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Intégration IPMA : API et pièges (15/10/2026)
+
+- **API** : `api.ipma.pt`, données ouvertes, sans compte ni clé, aucun quota publié. Cinq fichiers
+  par rafraîchissement : prévision agrégée par lieu (`public-data/forecast/aggregate/<id>.json`,
+  celle du site de l'IPMA et de pyipma/Home Assistant, non documentée dans l'open data), stations
+  (cache 24 h), observations des dernières 24 h (≈ 1 Mo), avertissements de toutes les zones,
+  risque d'incendie (RCM) du jour. Seuls les lieux dont l'appareil est **ajouté** sont lus.
+- **-99 = pas de valeur**, en nombre ou en chaîne (`"-99.0"`), partout : `ipmaNumber()`.
+- **Heures** : prévisions et avertissements en heure locale **sans décalage** (Lisbonne/Madère ou
+  Açores, une heure de moins) ; observations en UTC (`"2022-07-28T06:00"`). Hypothèse non
+  vérifiée sur une vraie réponse d'avertissements : `src/time.js` les traite en heure locale.
+- **`globalIdLocal`** (ex. 1010500 Aveiro) = id de plateforme de l'appareil : 1er chiffre la
+  région (1 continent, 2 Madère, 3 Açores), puis district et commune ; le code DICO du RCM est
+  `district(2) + commune(2)` (`0105`). Le RCM ne couvre que le continent.
+- **Niveaux d'avertissement** : `risk/integer` 0 à 3 est rendu par le front en pastille verte,
+  jaune, orange, rouge (`BadgeNumberDeviceValue`) — l'échelle de l'IPMA. Une valeur 4 ou 5 y
+  devient « inconnu » : le risque d'incendie (1 à 5) est donc un `counter-sensor/integer`.
+- **Probabilité de pluie** : aucun type « probabilité » ; `counter-sensor/integer` en `percent`.
+  Ne pas utiliser `humidity-sensor` (fausserait les moyennes d'humidité des pièces).
+- **Nom d'une fonctionnalité au tableau de bord** : le front compare le **type seul** (pas la
+  catégorie) pour décider d'afficher le libellé générique (`front/src/utils/device.js`). Chaque
+  type (`decimal`, `integer`, `text`, `min`, `max`) est donc porté par au moins deux
+  fonctionnalités.
+- **Manifeste ≤ 100 Ko** (`MANIFEST_MAX_BYTES` de l'indexeur, refus sinon). Les 423 options du
+  select `location` en quatre langues pesaient 127 Ko : leurs libellés (noms de lieux portugais)
+  ne portent que `en` — le front retombe sur `en` (`getLocalizedText`). `test/i18n.test.js`
+  l'admet pour ces seuls libellés. Régénérer avec `scripts/build-locations.mjs`.
+- **`source: "houses"`** n'existe qu'à partir de Gladys **5.2.0** (`DYNAMIC_SOURCES`), et
+  `getHouses()` exige `location: true` (403 sinon) : le manifeste demande les deux.
+- **Dates ICU** : la façon dont `Intl` joint jour de semaine, quantième et heure varie selon la
+  langue (`30 Sat`, `Fr., 06:00`) et la version de Node : composer soi-même
+  (`weekdayTime`, `dayLabel`) et tester les abréviations par motif.
+- **Session de développement** : le proxy refusait `api.ipma.pt`. Les fixtures réelles viennent
+  de pyipma ; `warnings_www.json` et `stations.json` sont reconstitués (voir
+  `test/fixtures/ipma/README.md`). `node scripts/probe.mjs <lieu>` lit les vraies données.

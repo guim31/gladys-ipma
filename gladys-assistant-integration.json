@@ -1,177 +1,3058 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "IPMA",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Official Portugal weather by IPMA: forecasts, station data, warnings, UV and fire risk.",
+    "fr": "Météo officielle du Portugal par l’IPMA : prévisions, stations, avertissements, UV, incendies.",
+    "de": "Offizielles Wetter Portugals vom IPMA: Vorhersagen, Stationen, Warnungen, UV, Waldbrandgefahr.",
+    "es": "Tiempo oficial de Portugal del IPMA: previsiones, estaciones, avisos, UV y riesgo de incendio."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-ipma:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-ipma/main/cover.png",
+  "categories": ["environment"],
+  "transports": ["cloud"],
+  "location": true,
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Portuguese weather",
+        "fr": "Météo du Portugal",
+        "de": "Wetter in Portugal",
+        "es": "Tiempo en Portugal"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Forecasts, observations, weather warnings, UV index and fire risk from IPMA, the Portuguese weather service: mainland Portugal, Madeira and the Azores. Free open data, no account. Choose a location, then add its device in the Discover tab. Not affiliated with IPMA.",
+        "fr": "Prévisions, observations, avertissements météo, indice UV et risque d’incendie de l’IPMA, le service météo portugais : Portugal continental, Madère et Açores. Données ouvertes gratuites, sans compte. Choisissez un lieu, puis ajoutez son appareil dans l’onglet Découverte. Sans lien avec l’IPMA.",
+        "de": "Vorhersagen, Beobachtungen, Wetterwarnungen, UV-Index und Waldbrandgefahr vom IPMA, dem portugiesischen Wetterdienst: Festland, Madeira und Azoren. Kostenlose offene Daten, ohne Konto. Wähle einen Ort und füge dann sein Gerät im Tab Entdecken hinzu. Nicht mit dem IPMA verbunden.",
+        "es": "Previsiones, observaciones, avisos meteorológicos, índice UV y riesgo de incendio del IPMA, el servicio meteorológico portugués: Portugal continental, Madeira y Azores. Datos abiertos gratuitos, sin cuenta. Elija un lugar y añada su dispositivo en la pestaña Descubrir. Sin relación con el IPMA."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://api.ipma.pt/",
+          "label": {
+            "en": "IPMA open data",
+            "fr": "Données ouvertes de l’IPMA",
+            "de": "Offene Daten des IPMA",
+            "es": "Datos abiertos del IPMA"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "location",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
+      "label": {
+        "en": "Location",
+        "fr": "Lieu",
+        "de": "Ort",
+        "es": "Lugar"
+      },
+      "description": {
+        "en": "IPMA location (municipality) to follow. The button “Use the location nearest to a house” below can choose it for you.",
+        "fr": "Lieu IPMA (commune) à suivre. Le bouton « Utiliser le lieu le plus proche d’une maison » ci-dessous peut le choisir pour vous.",
+        "de": "Zu verfolgender IPMA-Ort (Gemeinde). Die Schaltfläche „Ort nächst einem Haus verwenden“ unten kann ihn für dich wählen.",
+        "es": "Lugar IPMA (municipio) que seguir. El botón «Usar el lugar más cercano a una casa» de abajo puede elegirlo por usted."
+      },
+      "required": true,
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "1140100",
+          "label": {
+            "en": "Abrantes (Santarém)"
+          }
+        },
+        {
+          "value": "1010100",
+          "label": {
+            "en": "Águeda (Aveiro)"
+          }
+        },
+        {
+          "value": "1090100",
+          "label": {
+            "en": "Aguiar da Beira (Guarda)"
+          }
+        },
+        {
+          "value": "1070100",
+          "label": {
+            "en": "Alandroal (Évora)"
+          }
+        },
+        {
+          "value": "1010200",
+          "label": {
+            "en": "Albergaria-a-Velha (Aveiro)"
+          }
+        },
+        {
+          "value": "1080100",
+          "label": {
+            "en": "Albufeira (Faro)"
+          }
+        },
+        {
+          "value": "1150100",
+          "label": {
+            "en": "Alcácer do Sal (Setúbal)"
+          }
+        },
+        {
+          "value": "1140200",
+          "label": {
+            "en": "Alcanena (Santarém)"
+          }
+        },
+        {
+          "value": "1100100",
+          "label": {
+            "en": "Alcobaça (Leiria)"
+          }
+        },
+        {
+          "value": "1150200",
+          "label": {
+            "en": "Alcochete (Setúbal)"
+          }
+        },
+        {
+          "value": "1080200",
+          "label": {
+            "en": "Alcoutim (Faro)"
+          }
+        },
+        {
+          "value": "1110100",
+          "label": {
+            "en": "Alenquer (Lisboa)"
+          }
+        },
+        {
+          "value": "1040100",
+          "label": {
+            "en": "Alfandega da Fé (Bragança)"
+          }
+        },
+        {
+          "value": "1170100",
+          "label": {
+            "en": "Alijó (Vila Real)"
+          }
+        },
+        {
+          "value": "1080300",
+          "label": {
+            "en": "Aljezur (Faro)"
+          }
+        },
+        {
+          "value": "1020100",
+          "label": {
+            "en": "Aljustrel (Beja)"
+          }
+        },
+        {
+          "value": "1150300",
+          "label": {
+            "en": "Almada (Setúbal)"
+          }
+        },
+        {
+          "value": "1090200",
+          "label": {
+            "en": "Almeida (Guarda)"
+          }
+        },
+        {
+          "value": "1140300",
+          "label": {
+            "en": "Almeirim (Santarém)"
+          }
+        },
+        {
+          "value": "1020200",
+          "label": {
+            "en": "Almodôvar (Beja)"
+          }
+        },
+        {
+          "value": "1140400",
+          "label": {
+            "en": "Alpiarça (Santarém)"
+          }
+        },
+        {
+          "value": "1120100",
+          "label": {
+            "en": "Alter do Chão (Portalegre)"
+          }
+        },
+        {
+          "value": "1100200",
+          "label": {
+            "en": "Alvaiázere (Leiria)"
+          }
+        },
+        {
+          "value": "1020300",
+          "label": {
+            "en": "Alvito (Beja)"
+          }
+        },
+        {
+          "value": "1111500",
+          "label": {
+            "en": "Amadora (Lisboa)"
+          }
+        },
+        {
+          "value": "1130100",
+          "label": {
+            "en": "Amarante (Porto)"
+          }
+        },
+        {
+          "value": "1030100",
+          "label": {
+            "en": "Amares (Braga)"
+          }
+        },
+        {
+          "value": "1010300",
+          "label": {
+            "en": "Anadia (Aveiro)"
+          }
+        },
+        {
+          "value": "3430100",
+          "label": {
+            "en": "Angra do Heroísmo (Terceira, Açores)"
+          }
+        },
+        {
+          "value": "1100300",
+          "label": {
+            "en": "Ansião (Leiria)"
+          }
+        },
+        {
+          "value": "1160100",
+          "label": {
+            "en": "Arcos de Valdevez (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "2310921",
+          "label": {
+            "en": "Areeiro (Madeira)"
+          }
+        },
+        {
+          "value": "1060100",
+          "label": {
+            "en": "Arganil (Coimbra)"
+          }
+        },
+        {
+          "value": "1180100",
+          "label": {
+            "en": "Armamar (Viseu)"
+          }
+        },
+        {
+          "value": "1010400",
+          "label": {
+            "en": "Arouca (Aveiro)"
+          }
+        },
+        {
+          "value": "1070200",
+          "label": {
+            "en": "Arraiolos (Évora)"
+          }
+        },
+        {
+          "value": "1120200",
+          "label": {
+            "en": "Arronches (Portalegre)"
+          }
+        },
+        {
+          "value": "1110200",
+          "label": {
+            "en": "Arruda dos Vinhos (Lisboa)"
+          }
+        },
+        {
+          "value": "1010500",
+          "label": {
+            "en": "Aveiro (Aveiro)"
+          }
+        },
+        {
+          "value": "1120300",
+          "label": {
+            "en": "Avis (Portalegre)"
+          }
+        },
+        {
+          "value": "1110300",
+          "label": {
+            "en": "Azambuja (Lisboa)"
+          }
+        },
+        {
+          "value": "1130200",
+          "label": {
+            "en": "Baião (Porto)"
+          }
+        },
+        {
+          "value": "1030200",
+          "label": {
+            "en": "Barcelos (Braga)"
+          }
+        },
+        {
+          "value": "1020400",
+          "label": {
+            "en": "Barrancos (Beja)"
+          }
+        },
+        {
+          "value": "1150400",
+          "label": {
+            "en": "Barreiro (Setúbal)"
+          }
+        },
+        {
+          "value": "1100400",
+          "label": {
+            "en": "Batalha (Leiria)"
+          }
+        },
+        {
+          "value": "1020500",
+          "label": {
+            "en": "Beja (Beja)"
+          }
+        },
+        {
+          "value": "1050100",
+          "label": {
+            "en": "Belmonte (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1140500",
+          "label": {
+            "en": "Benavente (Santarém)"
+          }
+        },
+        {
+          "value": "2310521",
+          "label": {
+            "en": "Bica da Cana (Madeira)"
+          }
+        },
+        {
+          "value": "1100500",
+          "label": {
+            "en": "Bombarral (Leiria)"
+          }
+        },
+        {
+          "value": "1070300",
+          "label": {
+            "en": "Borba (Évora)"
+          }
+        },
+        {
+          "value": "1170200",
+          "label": {
+            "en": "Boticas (Vila Real)"
+          }
+        },
+        {
+          "value": "1030300",
+          "label": {
+            "en": "Braga (Braga)"
+          }
+        },
+        {
+          "value": "1040200",
+          "label": {
+            "en": "Bragança (Bragança)"
+          }
+        },
+        {
+          "value": "1030400",
+          "label": {
+            "en": "Cabeceiras de Basto (Braga)"
+          }
+        },
+        {
+          "value": "1110400",
+          "label": {
+            "en": "Cadaval (Lisboa)"
+          }
+        },
+        {
+          "value": "1100600",
+          "label": {
+            "en": "Caldas da Rainha (Leiria)"
+          }
+        },
+        {
+          "value": "2310200",
+          "label": {
+            "en": "Câmara de Lobos (Madeira)"
+          }
+        },
+        {
+          "value": "1160200",
+          "label": {
+            "en": "Caminha (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1120400",
+          "label": {
+            "en": "Campo Maior (Portalegre)"
+          }
+        },
+        {
+          "value": "2310424",
+          "label": {
+            "en": "Caniçal (Madeira)"
+          }
+        },
+        {
+          "value": "1060200",
+          "label": {
+            "en": "Cantanhede (Coimbra)"
+          }
+        },
+        {
+          "value": "1040300",
+          "label": {
+            "en": "Carrazeda de Ansiães (Bragança)"
+          }
+        },
+        {
+          "value": "1180200",
+          "label": {
+            "en": "Carregal do Sal (Viseu)"
+          }
+        },
+        {
+          "value": "1140600",
+          "label": {
+            "en": "Cartaxo (Santarém)"
+          }
+        },
+        {
+          "value": "1110500",
+          "label": {
+            "en": "Cascais (Lisboa)"
+          }
+        },
+        {
+          "value": "1100700",
+          "label": {
+            "en": "Castanheira de Pêra (Leiria)"
+          }
+        },
+        {
+          "value": "1050200",
+          "label": {
+            "en": "Castelo Branco (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1010600",
+          "label": {
+            "en": "Castelo de Paiva (Aveiro)"
+          }
+        },
+        {
+          "value": "1120500",
+          "label": {
+            "en": "Castelo de Vide (Portalegre)"
+          }
+        },
+        {
+          "value": "1180300",
+          "label": {
+            "en": "Castro Daire (Viseu)"
+          }
+        },
+        {
+          "value": "1080400",
+          "label": {
+            "en": "Castro Marim (Faro)"
+          }
+        },
+        {
+          "value": "1020600",
+          "label": {
+            "en": "Castro Verde (Beja)"
+          }
+        },
+        {
+          "value": "1090300",
+          "label": {
+            "en": "Celorico da Beira (Guarda)"
+          }
+        },
+        {
+          "value": "1030500",
+          "label": {
+            "en": "Celorico de Basto (Braga)"
+          }
+        },
+        {
+          "value": "1140700",
+          "label": {
+            "en": "Chamusca (Santarém)"
+          }
+        },
+        {
+          "value": "1170300",
+          "label": {
+            "en": "Chaves (Vila Real)"
+          }
+        },
+        {
+          "value": "1180400",
+          "label": {
+            "en": "Cinfães (Viseu)"
+          }
+        },
+        {
+          "value": "1060300",
+          "label": {
+            "en": "Coimbra (Coimbra)"
+          }
+        },
+        {
+          "value": "1060400",
+          "label": {
+            "en": "Condeixa-a-Nova (Coimbra)"
+          }
+        },
+        {
+          "value": "1140800",
+          "label": {
+            "en": "Constância (Santarém)"
+          }
+        },
+        {
+          "value": "1140900",
+          "label": {
+            "en": "Coruche (Santarém)"
+          }
+        },
+        {
+          "value": "1050300",
+          "label": {
+            "en": "Covilhã (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1120600",
+          "label": {
+            "en": "Crato (Portalegre)"
+          }
+        },
+        {
+          "value": "1020700",
+          "label": {
+            "en": "Cuba (Beja)"
+          }
+        },
+        {
+          "value": "1120700",
+          "label": {
+            "en": "Elvas (Portalegre)"
+          }
+        },
+        {
+          "value": "1141000",
+          "label": {
+            "en": "Entroncamento (Santarém)"
+          }
+        },
+        {
+          "value": "1110921",
+          "label": {
+            "en": "Ericeira (Lisboa)"
+          }
+        },
+        {
+          "value": "1010700",
+          "label": {
+            "en": "Espinho (Aveiro)"
+          }
+        },
+        {
+          "value": "1030600",
+          "label": {
+            "en": "Esposende (Braga)"
+          }
+        },
+        {
+          "value": "1010800",
+          "label": {
+            "en": "Estarreja (Aveiro)"
+          }
+        },
+        {
+          "value": "1070400",
+          "label": {
+            "en": "Estremoz (Évora)"
+          }
+        },
+        {
+          "value": "1070500",
+          "label": {
+            "en": "Évora (Évora)"
+          }
+        },
+        {
+          "value": "1030700",
+          "label": {
+            "en": "Fafe (Braga)"
+          }
+        },
+        {
+          "value": "1080530",
+          "label": {
+            "en": "Faro - Aeroporto (Faro)"
+          }
+        },
+        {
+          "value": "1080500",
+          "label": {
+            "en": "Faro (Faro)"
+          }
+        },
+        {
+          "value": "1130300",
+          "label": {
+            "en": "Felgueiras (Porto)"
+          }
+        },
+        {
+          "value": "1020800",
+          "label": {
+            "en": "Ferreira do Alentejo (Beja)"
+          }
+        },
+        {
+          "value": "1141100",
+          "label": {
+            "en": "Ferreira do Zêzere (Santarém)"
+          }
+        },
+        {
+          "value": "1060500",
+          "label": {
+            "en": "Figueira da Foz (Coimbra)"
+          }
+        },
+        {
+          "value": "1090400",
+          "label": {
+            "en": "Figueira de Castelo Rodrigo (Guarda)"
+          }
+        },
+        {
+          "value": "1100800",
+          "label": {
+            "en": "Figueiró dos Vinhos (Leiria)"
+          }
+        },
+        {
+          "value": "1090500",
+          "label": {
+            "en": "Fornos de Algodres (Guarda)"
+          }
+        },
+        {
+          "value": "1040400",
+          "label": {
+            "en": "Freixo Espada à Cinta (Bragança)"
+          }
+        },
+        {
+          "value": "1120800",
+          "label": {
+            "en": "Fronteira (Portalegre)"
+          }
+        },
+        {
+          "value": "2310300",
+          "label": {
+            "en": "Funchal (Madeira)"
+          }
+        },
+        {
+          "value": "2310321",
+          "label": {
+            "en": "Funchal/Lido (Madeira)"
+          }
+        },
+        {
+          "value": "1050400",
+          "label": {
+            "en": "Fundão (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1120900",
+          "label": {
+            "en": "Gavião (Portalegre)"
+          }
+        },
+        {
+          "value": "1060600",
+          "label": {
+            "en": "Góis (Coimbra)"
+          }
+        },
+        {
+          "value": "1141200",
+          "label": {
+            "en": "Golegã (Santarém)"
+          }
+        },
+        {
+          "value": "1130400",
+          "label": {
+            "en": "Gondomar (Porto)"
+          }
+        },
+        {
+          "value": "1090600",
+          "label": {
+            "en": "Gouveia (Guarda)"
+          }
+        },
+        {
+          "value": "1150500",
+          "label": {
+            "en": "Grândola (Setúbal)"
+          }
+        },
+        {
+          "value": "1090700",
+          "label": {
+            "en": "Guarda (Guarda)"
+          }
+        },
+        {
+          "value": "1030800",
+          "label": {
+            "en": "Guimarães (Braga)"
+          }
+        },
+        {
+          "value": "3470100",
+          "label": {
+            "en": "Horta (Faial, Açores)"
+          }
+        },
+        {
+          "value": "1050500",
+          "label": {
+            "en": "Idanha-a-Nova (Castelo Branco)"
+          }
+        },
+        {
+          "value": "2310820",
+          "label": {
+            "en": "Ilhas Selvagens (Madeira)"
+          }
+        },
+        {
+          "value": "1011000",
+          "label": {
+            "en": "Ílhavo (Aveiro)"
+          }
+        },
+        {
+          "value": "1080600",
+          "label": {
+            "en": "Lagoa (Faro)"
+          }
+        },
+        {
+          "value": "1080700",
+          "label": {
+            "en": "Lagos (Faro)"
+          }
+        },
+        {
+          "value": "3430121",
+          "label": {
+            "en": "Lajes (Terceira, Açores)"
+          }
+        },
+        {
+          "value": "1180500",
+          "label": {
+            "en": "Lamego (Viseu)"
+          }
+        },
+        {
+          "value": "1100900",
+          "label": {
+            "en": "Leiria (Leiria)"
+          }
+        },
+        {
+          "value": "1110623",
+          "label": {
+            "en": "Lisboa - Ajuda (Lisboa)"
+          }
+        },
+        {
+          "value": "1110622",
+          "label": {
+            "en": "Lisboa - Jardim Botânico (Lisboa)"
+          }
+        },
+        {
+          "value": "1110625",
+          "label": {
+            "en": "Lisboa - Oriente (Lisboa)"
+          }
+        },
+        {
+          "value": "1110600",
+          "label": {
+            "en": "Lisboa (Lisboa)"
+          }
+        },
+        {
+          "value": "1080800",
+          "label": {
+            "en": "Loulé (Faro)"
+          }
+        },
+        {
+          "value": "1110700",
+          "label": {
+            "en": "Loures (Lisboa)"
+          }
+        },
+        {
+          "value": "1110800",
+          "label": {
+            "en": "Lourinhã (Lisboa)"
+          }
+        },
+        {
+          "value": "1060700",
+          "label": {
+            "en": "Lousã (Coimbra)"
+          }
+        },
+        {
+          "value": "1130500",
+          "label": {
+            "en": "Lousada (Porto)"
+          }
+        },
+        {
+          "value": "2310522",
+          "label": {
+            "en": "Lugar de Baixo (Madeira)"
+          }
+        },
+        {
+          "value": "1141300",
+          "label": {
+            "en": "Mação (Santarém)"
+          }
+        },
+        {
+          "value": "1040500",
+          "label": {
+            "en": "Macedo de Cavaleiros (Bragança)"
+          }
+        },
+        {
+          "value": "2310400",
+          "label": {
+            "en": "Machico (Madeira)"
+          }
+        },
+        {
+          "value": "3460200",
+          "label": {
+            "en": "Madalena (Pico, Açores)"
+          }
+        },
+        {
+          "value": "1110900",
+          "label": {
+            "en": "Mafra (Lisboa)"
+          }
+        },
+        {
+          "value": "1130600",
+          "label": {
+            "en": "Maia (Porto)"
+          }
+        },
+        {
+          "value": "1180600",
+          "label": {
+            "en": "Mangualde (Viseu)"
+          }
+        },
+        {
+          "value": "1090800",
+          "label": {
+            "en": "Manteigas (Guarda)"
+          }
+        },
+        {
+          "value": "1130700",
+          "label": {
+            "en": "Marco de Canaveses (Porto)"
+          }
+        },
+        {
+          "value": "1101000",
+          "label": {
+            "en": "Marinha Grande (Leiria)"
+          }
+        },
+        {
+          "value": "1121000",
+          "label": {
+            "en": "Marvão (Portalegre)"
+          }
+        },
+        {
+          "value": "1130800",
+          "label": {
+            "en": "Matosinhos (Porto)"
+          }
+        },
+        {
+          "value": "1011100",
+          "label": {
+            "en": "Mealhada (Aveiro)"
+          }
+        },
+        {
+          "value": "1090900",
+          "label": {
+            "en": "Meda (Guarda)"
+          }
+        },
+        {
+          "value": "1160300",
+          "label": {
+            "en": "Melgaço (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1020900",
+          "label": {
+            "en": "Mértola (Beja)"
+          }
+        },
+        {
+          "value": "1170400",
+          "label": {
+            "en": "Mesão Frio (Vila Real)"
+          }
+        },
+        {
+          "value": "1060800",
+          "label": {
+            "en": "Mira (Coimbra)"
+          }
+        },
+        {
+          "value": "1060900",
+          "label": {
+            "en": "Miranda do Corvo (Coimbra)"
+          }
+        },
+        {
+          "value": "1040600",
+          "label": {
+            "en": "Miranda do Douro (Bragança)"
+          }
+        },
+        {
+          "value": "1040700",
+          "label": {
+            "en": "Mirandela (Bragança)"
+          }
+        },
+        {
+          "value": "1040800",
+          "label": {
+            "en": "Mogadouro (Bragança)"
+          }
+        },
+        {
+          "value": "1180700",
+          "label": {
+            "en": "Moimenta da Beira (Viseu)"
+          }
+        },
+        {
+          "value": "1150600",
+          "label": {
+            "en": "Moita (Setúbal)"
+          }
+        },
+        {
+          "value": "1160400",
+          "label": {
+            "en": "Monção (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1080900",
+          "label": {
+            "en": "Monchique (Faro)"
+          }
+        },
+        {
+          "value": "1170500",
+          "label": {
+            "en": "Mondim de Basto (Vila Real)"
+          }
+        },
+        {
+          "value": "1121100",
+          "label": {
+            "en": "Monforte (Portalegre)"
+          }
+        },
+        {
+          "value": "1170600",
+          "label": {
+            "en": "Montalegre (Vila Real)"
+          }
+        },
+        {
+          "value": "1070600",
+          "label": {
+            "en": "Montemor-o-Novo (Évora)"
+          }
+        },
+        {
+          "value": "1061000",
+          "label": {
+            "en": "Montemor-o-Velho (Coimbra)"
+          }
+        },
+        {
+          "value": "1150700",
+          "label": {
+            "en": "Montijo (Setúbal)"
+          }
+        },
+        {
+          "value": "1070700",
+          "label": {
+            "en": "Mora (Évora)"
+          }
+        },
+        {
+          "value": "1180800",
+          "label": {
+            "en": "Mortágua (Viseu)"
+          }
+        },
+        {
+          "value": "1021000",
+          "label": {
+            "en": "Moura (Beja)"
+          }
+        },
+        {
+          "value": "1070800",
+          "label": {
+            "en": "Mourão (Évora)"
+          }
+        },
+        {
+          "value": "1170700",
+          "label": {
+            "en": "Murça (Vila Real)"
+          }
+        },
+        {
+          "value": "1011200",
+          "label": {
+            "en": "Murtosa (Aveiro)"
+          }
+        },
+        {
+          "value": "1101100",
+          "label": {
+            "en": "Nazaré (Leiria)"
+          }
+        },
+        {
+          "value": "1180900",
+          "label": {
+            "en": "Nelas (Viseu)"
+          }
+        },
+        {
+          "value": "1121200",
+          "label": {
+            "en": "Nisa (Portalegre)"
+          }
+        },
+        {
+          "value": "3420200",
+          "label": {
+            "en": "Nordeste (São Miguel, Açores)"
+          }
+        },
+        {
+          "value": "1101200",
+          "label": {
+            "en": "Óbidos (Leiria)"
+          }
+        },
+        {
+          "value": "1021100",
+          "label": {
+            "en": "Odemira (Beja)"
+          }
+        },
+        {
+          "value": "1111600",
+          "label": {
+            "en": "Odivelas (Lisboa)"
+          }
+        },
+        {
+          "value": "1111000",
+          "label": {
+            "en": "Oeiras (Lisboa)"
+          }
+        },
+        {
+          "value": "1050600",
+          "label": {
+            "en": "Oleiros (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1081000",
+          "label": {
+            "en": "Olhão (Faro)"
+          }
+        },
+        {
+          "value": "1011300",
+          "label": {
+            "en": "Oliveira de Azeméis (Aveiro)"
+          }
+        },
+        {
+          "value": "1181000",
+          "label": {
+            "en": "Oliveira de Frades (Viseu)"
+          }
+        },
+        {
+          "value": "1011400",
+          "label": {
+            "en": "Oliveira do Bairro (Aveiro)"
+          }
+        },
+        {
+          "value": "1061100",
+          "label": {
+            "en": "Oliveira do Hospital (Coimbra)"
+          }
+        },
+        {
+          "value": "1142100",
+          "label": {
+            "en": "Ourém (Santarém)"
+          }
+        },
+        {
+          "value": "1021200",
+          "label": {
+            "en": "Ourique (Beja)"
+          }
+        },
+        {
+          "value": "1011500",
+          "label": {
+            "en": "Ovar (Aveiro)"
+          }
+        },
+        {
+          "value": "1130900",
+          "label": {
+            "en": "Paços de Ferreira (Porto)"
+          }
+        },
+        {
+          "value": "1150800",
+          "label": {
+            "en": "Palmela (Setúbal)"
+          }
+        },
+        {
+          "value": "1061200",
+          "label": {
+            "en": "Pampilhosa da Serra (Coimbra)"
+          }
+        },
+        {
+          "value": "1131000",
+          "label": {
+            "en": "Paredes (Porto)"
+          }
+        },
+        {
+          "value": "1160500",
+          "label": {
+            "en": "Paredes de Coura (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1101300",
+          "label": {
+            "en": "Pedrógão Grande (Leiria)"
+          }
+        },
+        {
+          "value": "1061300",
+          "label": {
+            "en": "Penacova (Coimbra)"
+          }
+        },
+        {
+          "value": "1131100",
+          "label": {
+            "en": "Penafiel (Porto)"
+          }
+        },
+        {
+          "value": "1181100",
+          "label": {
+            "en": "Penalva do Castelo (Viseu)"
+          }
+        },
+        {
+          "value": "1050700",
+          "label": {
+            "en": "Penamacor (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1181200",
+          "label": {
+            "en": "Penedono (Viseu)"
+          }
+        },
+        {
+          "value": "1061400",
+          "label": {
+            "en": "Penela (Coimbra)"
+          }
+        },
+        {
+          "value": "1090821",
+          "label": {
+            "en": "Penhas Douradas (Guarda)"
+          }
+        },
+        {
+          "value": "1050321",
+          "label": {
+            "en": "Penhas Saúde (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1101400",
+          "label": {
+            "en": "Peniche (Leiria)"
+          }
+        },
+        {
+          "value": "1170800",
+          "label": {
+            "en": "Peso da Régua (Vila Real)"
+          }
+        },
+        {
+          "value": "1091000",
+          "label": {
+            "en": "Pinhel (Guarda)"
+          }
+        },
+        {
+          "value": "1101500",
+          "label": {
+            "en": "Pombal (Leiria)"
+          }
+        },
+        {
+          "value": "3420300",
+          "label": {
+            "en": "Ponta Delgada (São Miguel, Açores)"
+          }
+        },
+        {
+          "value": "2310123",
+          "label": {
+            "en": "Ponta do Pargo (Madeira)"
+          }
+        },
+        {
+          "value": "1160600",
+          "label": {
+            "en": "Ponte da Barca (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1160700",
+          "label": {
+            "en": "Ponte de Lima (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1121300",
+          "label": {
+            "en": "Ponte de Sor (Portalegre)"
+          }
+        },
+        {
+          "value": "1121400",
+          "label": {
+            "en": "Portalegre (Portalegre)"
+          }
+        },
+        {
+          "value": "1070900",
+          "label": {
+            "en": "Portel (Évora)"
+          }
+        },
+        {
+          "value": "1081100",
+          "label": {
+            "en": "Portimão (Faro)"
+          }
+        },
+        {
+          "value": "1131200",
+          "label": {
+            "en": "Porto (Porto)"
+          }
+        },
+        {
+          "value": "1101600",
+          "label": {
+            "en": "Porto de Mós (Leiria)"
+          }
+        },
+        {
+          "value": "2310600",
+          "label": {
+            "en": "Porto Moniz (Madeira)"
+          }
+        },
+        {
+          "value": "2320100",
+          "label": {
+            "en": "Porto Santo (Porto Santo)"
+          }
+        },
+        {
+          "value": "1030900",
+          "label": {
+            "en": "Póvoa de Lanhoso (Braga)"
+          }
+        },
+        {
+          "value": "1131300",
+          "label": {
+            "en": "Póvoa de Varzim (Porto)"
+          }
+        },
+        {
+          "value": "1131622",
+          "label": {
+            "en": "Praia Azul (Porto)"
+          }
+        },
+        {
+          "value": "1150525",
+          "label": {
+            "en": "Praia Costa da Gale (Melides) (Setúbal)"
+          }
+        },
+        {
+          "value": "1111125",
+          "label": {
+            "en": "Praia da Adraga (Lisboa)"
+          }
+        },
+        {
+          "value": "1131321",
+          "label": {
+            "en": "Praia da Agucadoura (Porto)"
+          }
+        },
+        {
+          "value": "1131722",
+          "label": {
+            "en": "Praia da Aguda (Porto)"
+          }
+        },
+        {
+          "value": "1080323",
+          "label": {
+            "en": "Praia da Amoreira (Faro)"
+          }
+        },
+        {
+          "value": "1030321",
+          "label": {
+            "en": "Praia da Apúlia (Braga)"
+          }
+        },
+        {
+          "value": "1110821",
+          "label": {
+            "en": "Praia da Areia Branca (Lisboa)"
+          }
+        },
+        {
+          "value": "1080322",
+          "label": {
+            "en": "Praia da Arrifana (Faro)"
+          }
+        },
+        {
+          "value": "1011021",
+          "label": {
+            "en": "Praia da Barra (Aveiro)"
+          }
+        },
+        {
+          "value": "1080324",
+          "label": {
+            "en": "Praia da Carrapateira (Faro)"
+          }
+        },
+        {
+          "value": "1150522",
+          "label": {
+            "en": "Praia da Comporta (Setúbal)"
+          }
+        },
+        {
+          "value": "1101426",
+          "label": {
+            "en": "Praia da Consolação (Leiria)"
+          }
+        },
+        {
+          "value": "1150322",
+          "label": {
+            "en": "Praia da Costa da Caparica (Setúbal)"
+          }
+        },
+        {
+          "value": "1011022",
+          "label": {
+            "en": "Praia da Costa Nova (Aveiro)"
+          }
+        },
+        {
+          "value": "1150324",
+          "label": {
+            "en": "Praia da Cova do Vapor (Setúbal)"
+          }
+        },
+        {
+          "value": "1080723",
+          "label": {
+            "en": "Praia da D. Ana (Faro)"
+          }
+        },
+        {
+          "value": "1080822",
+          "label": {
+            "en": "Praia da Falésia (Faro)"
+          }
+        },
+        {
+          "value": "1060522",
+          "label": {
+            "en": "Praia da Figueira da Foz (Coimbra)"
+          }
+        },
+        {
+          "value": "1150323",
+          "label": {
+            "en": "Praia da Fonte da Telha (Setúbal)"
+          }
+        },
+        {
+          "value": "1100621",
+          "label": {
+            "en": "Praia da Foz do Arelho (Leiria)"
+          }
+        },
+        {
+          "value": "1110922",
+          "label": {
+            "en": "Praia da Foz do Lizandro (Lisboa)"
+          }
+        },
+        {
+          "value": "1081021",
+          "label": {
+            "en": "Praia da Fuzeta (Faro)"
+          }
+        },
+        {
+          "value": "1080521",
+          "label": {
+            "en": "Praia da Ilha da Culatra (Faro)"
+          }
+        },
+        {
+          "value": "1080522",
+          "label": {
+            "en": "Praia da Ilha de Faro (Faro)"
+          }
+        },
+        {
+          "value": "1081421",
+          "label": {
+            "en": "Praia da Ilha de Tavira (Faro)"
+          }
+        },
+        {
+          "value": "1151121",
+          "label": {
+            "en": "Praia da Lagoa de Albufeira (Setúbal)"
+          }
+        },
+        {
+          "value": "1080721",
+          "label": {
+            "en": "Praia da Luz (Faro)"
+          }
+        },
+        {
+          "value": "1081621",
+          "label": {
+            "en": "Praia da Manta Rota (Faro)"
+          }
+        },
+        {
+          "value": "1080722",
+          "label": {
+            "en": "Praia da Meia Praia (Faro)"
+          }
+        },
+        {
+          "value": "1101121",
+          "label": {
+            "en": "Praia da Nazaré (Leiria)"
+          }
+        },
+        {
+          "value": "1081123",
+          "label": {
+            "en": "Praia da Rocha (Faro)"
+          }
+        },
+        {
+          "value": "1081524",
+          "label": {
+            "en": "Praia da Salema (Faro)"
+          }
+        },
+        {
+          "value": "1131322",
+          "label": {
+            "en": "Praia da Salgueira (Porto)"
+          }
+        },
+        {
+          "value": "1151321",
+          "label": {
+            "en": "Praia da Samoqueira (Setúbal)"
+          }
+        },
+        {
+          "value": "1060221",
+          "label": {
+            "en": "Praia da Tocha (Coimbra)"
+          }
+        },
+        {
+          "value": "1011221",
+          "label": {
+            "en": "Praia da Torreira (Aveiro)"
+          }
+        },
+        {
+          "value": "1011821",
+          "label": {
+            "en": "Praia da Vagueira (Aveiro)"
+          }
+        },
+        {
+          "value": "1021124",
+          "label": {
+            "en": "Praia da Zambujeira (Beja)"
+          }
+        },
+        {
+          "value": "1111123",
+          "label": {
+            "en": "Praia das Maçãs (Lisboa)"
+          }
+        },
+        {
+          "value": "1160922",
+          "label": {
+            "en": "Praia de Afife (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1021121",
+          "label": {
+            "en": "Praia de Almograve (Beja)"
+          }
+        },
+        {
+          "value": "1080421",
+          "label": {
+            "en": "Praia de Altura (Faro)"
+          }
+        },
+        {
+          "value": "1081122",
+          "label": {
+            "en": "Praia de Alvor (Faro)"
+          }
+        },
+        {
+          "value": "1081321",
+          "label": {
+            "en": "Praia de Armação de Pera (Faro)"
+          }
+        },
+        {
+          "value": "1131621",
+          "label": {
+            "en": "Praia de Árvore (Porto)"
+          }
+        },
+        {
+          "value": "1081422",
+          "label": {
+            "en": "Praia de Cabanas (Faro)"
+          }
+        },
+        {
+          "value": "1160223",
+          "label": {
+            "en": "Praia de Caminha (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1110521",
+          "label": {
+            "en": "Praia de Carcavelos (Lisboa)"
+          }
+        },
+        {
+          "value": "1110523",
+          "label": {
+            "en": "Praia de Cascais (Lisboa)"
+          }
+        },
+        {
+          "value": "1110923",
+          "label": {
+            "en": "Praia de Coxos (Lisboa)"
+          }
+        },
+        {
+          "value": "1011524",
+          "label": {
+            "en": "Praia de Esmoriz (Aveiro)"
+          }
+        },
+        {
+          "value": "1010821",
+          "label": {
+            "en": "Praia de Espinho (Aveiro)"
+          }
+        },
+        {
+          "value": "1030622",
+          "label": {
+            "en": "Praia de Esposende (Braga)"
+          }
+        },
+        {
+          "value": "1130821",
+          "label": {
+            "en": "Praia de Leça da Palmeira (Porto)"
+          }
+        },
+        {
+          "value": "1130823",
+          "label": {
+            "en": "Praia de Matosinhos (Porto)"
+          }
+        },
+        {
+          "value": "1150524",
+          "label": {
+            "en": "Praia de Melides (Setúbal)"
+          }
+        },
+        {
+          "value": "1021111",
+          "label": {
+            "en": "Praia de Milfontes (Beja)"
+          }
+        },
+        {
+          "value": "1060821",
+          "label": {
+            "en": "Praia de Mira (Coimbra)"
+          }
+        },
+        {
+          "value": "1131723",
+          "label": {
+            "en": "Praia de Miramar (Porto)"
+          }
+        },
+        {
+          "value": "1160222",
+          "label": {
+            "en": "Praia de Moledo (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1081622",
+          "label": {
+            "en": "Praia de Monte Gordo (Faro)"
+          }
+        },
+        {
+          "value": "1080321",
+          "label": {
+            "en": "Praia de Odeceixe (Faro)"
+          }
+        },
+        {
+          "value": "1030621",
+          "label": {
+            "en": "Praia de Ofir (Braga)"
+          }
+        },
+        {
+          "value": "1100921",
+          "label": {
+            "en": "Praia de Pedrogão (Leiria)"
+          }
+        },
+        {
+          "value": "1101424",
+          "label": {
+            "en": "Praia de Peniche (Leiria)"
+          }
+        },
+        {
+          "value": "1151322",
+          "label": {
+            "en": "Praia de Porto Covo (Setúbal)"
+          }
+        },
+        {
+          "value": "1080724",
+          "label": {
+            "en": "Praia de Porto de Mós (Faro)"
+          }
+        },
+        {
+          "value": "1080823",
+          "label": {
+            "en": "Praia de Quarteira (Faro)"
+          }
+        },
+        {
+          "value": "1110924",
+          "label": {
+            "en": "Praia de Ribeira de Ilhas (Lisboa)"
+          }
+        },
+        {
+          "value": "1131721",
+          "label": {
+            "en": "Praia de Salgueiros (Porto)"
+          }
+        },
+        {
+          "value": "1111321",
+          "label": {
+            "en": "Praia de Santa Cruz (Lisboa)"
+          }
+        },
+        {
+          "value": "1080122",
+          "label": {
+            "en": "Praia de Santa Eulália (Faro)"
+          }
+        },
+        {
+          "value": "1150922",
+          "label": {
+            "en": "Praia de Santo André (Setúbal)"
+          }
+        },
+        {
+          "value": "1010522",
+          "label": {
+            "en": "Praia de São Jacinto (Aveiro)"
+          }
+        },
+        {
+          "value": "1100121",
+          "label": {
+            "en": "Praia de São Martinho do Porto (Leiria)"
+          }
+        },
+        {
+          "value": "1011523",
+          "label": {
+            "en": "Praia de São Pedro da Maceda (Aveiro)"
+          }
+        },
+        {
+          "value": "1101021",
+          "label": {
+            "en": "Praia de São Pedro de Moel (Leiria)"
+          }
+        },
+        {
+          "value": "1151324",
+          "label": {
+            "en": "Praia de São Torpes (Setúbal)"
+          }
+        },
+        {
+          "value": "1151124",
+          "label": {
+            "en": "Praia de Sesimbra (Setúbal)"
+          }
+        },
+        {
+          "value": "1150521",
+          "label": {
+            "en": "Praia de Troia (Setúbal)"
+          }
+        },
+        {
+          "value": "1160221",
+          "label": {
+            "en": "Praia de Vila Praia de Âncora (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1080821",
+          "label": {
+            "en": "Praia de Vilamoura (Faro)"
+          }
+        },
+        {
+          "value": "1101221",
+          "label": {
+            "en": "Praia Del Rey (Leiria)"
+          }
+        },
+        {
+          "value": "1080326",
+          "label": {
+            "en": "Praia do Amado (Faro)"
+          }
+        },
+        {
+          "value": "1101423",
+          "label": {
+            "en": "Praia do Baleal (Leiria)"
+          }
+        },
+        {
+          "value": "1081423",
+          "label": {
+            "en": "Praia do Barril (Faro)"
+          }
+        },
+        {
+          "value": "1081522",
+          "label": {
+            "en": "Praia do Beliche (Faro)"
+          }
+        },
+        {
+          "value": "1081521",
+          "label": {
+            "en": "Praia do Burgau (Faro)"
+          }
+        },
+        {
+          "value": "1081623",
+          "label": {
+            "en": "Praia do Cabeço (Faro)"
+          }
+        },
+        {
+          "value": "1131724",
+          "label": {
+            "en": "Praia do Cabedelo (Porto)"
+          }
+        },
+        {
+          "value": "1160921",
+          "label": {
+            "en": "Praia do Cabedelo (Viana Castelo) (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1150523",
+          "label": {
+            "en": "Praia do Carvalhal (Setúbal)"
+          }
+        },
+        {
+          "value": "1080621",
+          "label": {
+            "en": "Praia do Carvoeiro (Faro)"
+          }
+        },
+        {
+          "value": "1011521",
+          "label": {
+            "en": "Praia do Furadouro (Aveiro)"
+          }
+        },
+        {
+          "value": "1110522",
+          "label": {
+            "en": "Praia do Guincho (Lisboa)"
+          }
+        },
+        {
+          "value": "1111124",
+          "label": {
+            "en": "Praia do Magoito (Lisboa)"
+          }
+        },
+        {
+          "value": "1021122",
+          "label": {
+            "en": "Praia do Malhão (Beja)"
+          }
+        },
+        {
+          "value": "1151122",
+          "label": {
+            "en": "Praia do Meco (Setúbal)"
+          }
+        },
+        {
+          "value": "1080325",
+          "label": {
+            "en": "Praia do Monte Clérigo (Faro)"
+          }
+        },
+        {
+          "value": "1151325",
+          "label": {
+            "en": "Praia do Morgável (Setúbal)"
+          }
+        },
+        {
+          "value": "1101521",
+          "label": {
+            "en": "Praia do Osso da Baleia (Leiria)"
+          }
+        },
+        {
+          "value": "1081121",
+          "label": {
+            "en": "Praia do Vau (Faro)"
+          }
+        },
+        {
+          "value": "1081523",
+          "label": {
+            "en": "Praia do Zavial (Faro)"
+          }
+        },
+        {
+          "value": "1131224",
+          "label": {
+            "en": "Praia dos Ingleses (Porto)"
+          }
+        },
+        {
+          "value": "1080121",
+          "label": {
+            "en": "Praia dos Pescadores (Faro)"
+          }
+        },
+        {
+          "value": "1111126",
+          "label": {
+            "en": "Praia Grande (Lisboa)"
+          }
+        },
+        {
+          "value": "1101425",
+          "label": {
+            "en": "Praia Supertubos (Leiria)"
+          }
+        },
+        {
+          "value": "1011522",
+          "label": {
+            "en": "Praia Torrão do Lameiro (Aveiro)"
+          }
+        },
+        {
+          "value": "1050800",
+          "label": {
+            "en": "Proença-a-Nova (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1071000",
+          "label": {
+            "en": "Redondo (Évora)"
+          }
+        },
+        {
+          "value": "1071100",
+          "label": {
+            "en": "Reguengos de Monsaraz (Évora)"
+          }
+        },
+        {
+          "value": "1181300",
+          "label": {
+            "en": "Resende (Viseu)"
+          }
+        },
+        {
+          "value": "1170900",
+          "label": {
+            "en": "Ribeira de Pena (Vila Real)"
+          }
+        },
+        {
+          "value": "1141400",
+          "label": {
+            "en": "Rio Maior (Santarém)"
+          }
+        },
+        {
+          "value": "1171000",
+          "label": {
+            "en": "Sabrosa (Vila Real)"
+          }
+        },
+        {
+          "value": "1091100",
+          "label": {
+            "en": "Sabugal (Guarda)"
+          }
+        },
+        {
+          "value": "1081505",
+          "label": {
+            "en": "Sagres (Faro)"
+          }
+        },
+        {
+          "value": "1141500",
+          "label": {
+            "en": "Salvaterra de Magos (Santarém)"
+          }
+        },
+        {
+          "value": "1181400",
+          "label": {
+            "en": "Santa Comba Dão (Viseu)"
+          }
+        },
+        {
+          "value": "2310800",
+          "label": {
+            "en": "Santa Cruz - Aeroporto (Madeira)"
+          }
+        },
+        {
+          "value": "3440100",
+          "label": {
+            "en": "Santa Cruz da Graciosa (Graciosa, Açores)"
+          }
+        },
+        {
+          "value": "3480200",
+          "label": {
+            "en": "Santa Cruz das Flores (Flores, Açores)"
+          }
+        },
+        {
+          "value": "1010900",
+          "label": {
+            "en": "Santa Maria da Feira (Aveiro)"
+          }
+        },
+        {
+          "value": "1171100",
+          "label": {
+            "en": "Santa Marta de Penaguião (Vila Real)"
+          }
+        },
+        {
+          "value": "2310900",
+          "label": {
+            "en": "Santana (Madeira)"
+          }
+        },
+        {
+          "value": "1141600",
+          "label": {
+            "en": "Santarém (Santarém)"
+          }
+        },
+        {
+          "value": "1150900",
+          "label": {
+            "en": "Santiago do Cacém (Setúbal)"
+          }
+        },
+        {
+          "value": "2310421",
+          "label": {
+            "en": "Santo da Serra (Madeira)"
+          }
+        },
+        {
+          "value": "1131400",
+          "label": {
+            "en": "Santo Tirso (Porto)"
+          }
+        },
+        {
+          "value": "1081200",
+          "label": {
+            "en": "São Brás de Alportel (Faro)"
+          }
+        },
+        {
+          "value": "1011600",
+          "label": {
+            "en": "São João da Madeira (Aveiro)"
+          }
+        },
+        {
+          "value": "1181500",
+          "label": {
+            "en": "São João da Pesqueira (Viseu)"
+          }
+        },
+        {
+          "value": "1181600",
+          "label": {
+            "en": "São Pedro do Sul (Viseu)"
+          }
+        },
+        {
+          "value": "2311000",
+          "label": {
+            "en": "São Vicente (Madeira)"
+          }
+        },
+        {
+          "value": "1141700",
+          "label": {
+            "en": "Sardoal (Santarém)"
+          }
+        },
+        {
+          "value": "1181700",
+          "label": {
+            "en": "Sátão (Viseu)"
+          }
+        },
+        {
+          "value": "1091200",
+          "label": {
+            "en": "Seia (Guarda)"
+          }
+        },
+        {
+          "value": "1151000",
+          "label": {
+            "en": "Seixal (Setúbal)"
+          }
+        },
+        {
+          "value": "1181800",
+          "label": {
+            "en": "Sernancelhe (Viseu)"
+          }
+        },
+        {
+          "value": "1021300",
+          "label": {
+            "en": "Serpa (Beja)"
+          }
+        },
+        {
+          "value": "1090822",
+          "label": {
+            "en": "Serra da Estrela, Torre (Guarda)"
+          }
+        },
+        {
+          "value": "1050900",
+          "label": {
+            "en": "Sertã (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1151100",
+          "label": {
+            "en": "Sesimbra (Setúbal)"
+          }
+        },
+        {
+          "value": "1151200",
+          "label": {
+            "en": "Setúbal (Setúbal)"
+          }
+        },
+        {
+          "value": "1011700",
+          "label": {
+            "en": "Sever do Vouga (Aveiro)"
+          }
+        },
+        {
+          "value": "1081300",
+          "label": {
+            "en": "Silves (Faro)"
+          }
+        },
+        {
+          "value": "1151300",
+          "label": {
+            "en": "Sines (Setúbal)"
+          }
+        },
+        {
+          "value": "1111100",
+          "label": {
+            "en": "Sintra (Lisboa)"
+          }
+        },
+        {
+          "value": "1111200",
+          "label": {
+            "en": "Sobral de Monte Agraço (Lisboa)"
+          }
+        },
+        {
+          "value": "1061500",
+          "label": {
+            "en": "Soure (Coimbra)"
+          }
+        },
+        {
+          "value": "1121500",
+          "label": {
+            "en": "Sousel (Portalegre)"
+          }
+        },
+        {
+          "value": "1061600",
+          "label": {
+            "en": "Tábua (Coimbra)"
+          }
+        },
+        {
+          "value": "1181900",
+          "label": {
+            "en": "Tabuaço (Viseu)"
+          }
+        },
+        {
+          "value": "1182000",
+          "label": {
+            "en": "Tarouca (Viseu)"
+          }
+        },
+        {
+          "value": "1081400",
+          "label": {
+            "en": "Tavira (Faro)"
+          }
+        },
+        {
+          "value": "1031000",
+          "label": {
+            "en": "Terras de Bouro (Braga)"
+          }
+        },
+        {
+          "value": "1141800",
+          "label": {
+            "en": "Tomar (Santarém)"
+          }
+        },
+        {
+          "value": "1182100",
+          "label": {
+            "en": "Tondela (Viseu)"
+          }
+        },
+        {
+          "value": "1040900",
+          "label": {
+            "en": "Torre de Moncorvo (Bragança)"
+          }
+        },
+        {
+          "value": "1141900",
+          "label": {
+            "en": "Torres Novas (Santarém)"
+          }
+        },
+        {
+          "value": "1111300",
+          "label": {
+            "en": "Torres Vedras (Lisboa)"
+          }
+        },
+        {
+          "value": "1091300",
+          "label": {
+            "en": "Trancoso (Guarda)"
+          }
+        },
+        {
+          "value": "1131800",
+          "label": {
+            "en": "Trofa (Porto)"
+          }
+        },
+        {
+          "value": "1011800",
+          "label": {
+            "en": "Vagos (Aveiro)"
+          }
+        },
+        {
+          "value": "1011900",
+          "label": {
+            "en": "Vale de Cambra (Aveiro)"
+          }
+        },
+        {
+          "value": "1160800",
+          "label": {
+            "en": "Valença (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1131500",
+          "label": {
+            "en": "Valongo (Porto)"
+          }
+        },
+        {
+          "value": "1171200",
+          "label": {
+            "en": "Valpaços (Vila Real)"
+          }
+        },
+        {
+          "value": "3450200",
+          "label": {
+            "en": "Velas (São Jorge, Açores)"
+          }
+        },
+        {
+          "value": "1071200",
+          "label": {
+            "en": "Vendas Novas (Évora)"
+          }
+        },
+        {
+          "value": "1071300",
+          "label": {
+            "en": "Viana do Alentejo (Évora)"
+          }
+        },
+        {
+          "value": "1160900",
+          "label": {
+            "en": "Viana do Castelo (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1021400",
+          "label": {
+            "en": "Vidigueira (Beja)"
+          }
+        },
+        {
+          "value": "1031100",
+          "label": {
+            "en": "Vieira do Minho (Braga)"
+          }
+        },
+        {
+          "value": "1051000",
+          "label": {
+            "en": "Vila de Rei (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1081500",
+          "label": {
+            "en": "Vila do Bispo (Faro)"
+          }
+        },
+        {
+          "value": "1131600",
+          "label": {
+            "en": "Vila do Conde (Porto)"
+          }
+        },
+        {
+          "value": "3490100",
+          "label": {
+            "en": "Vila do Corvo (Corvo, Açores)"
+          }
+        },
+        {
+          "value": "3410100",
+          "label": {
+            "en": "Vila do Porto (Santa Maria, Açores)"
+          }
+        },
+        {
+          "value": "1041000",
+          "label": {
+            "en": "Vila Flor (Bragança)"
+          }
+        },
+        {
+          "value": "1111400",
+          "label": {
+            "en": "Vila Franca de Xira (Lisboa)"
+          }
+        },
+        {
+          "value": "1142000",
+          "label": {
+            "en": "Vila Nova da Barquinha (Santarém)"
+          }
+        },
+        {
+          "value": "1161000",
+          "label": {
+            "en": "Vila Nova de Cerveira (Viana do Castelo)"
+          }
+        },
+        {
+          "value": "1031200",
+          "label": {
+            "en": "Vila Nova de Famalicão (Braga)"
+          }
+        },
+        {
+          "value": "1091400",
+          "label": {
+            "en": "Vila Nova de Foz Coa (Guarda)"
+          }
+        },
+        {
+          "value": "1131700",
+          "label": {
+            "en": "Vila Nova de Gaia (Porto)"
+          }
+        },
+        {
+          "value": "1182200",
+          "label": {
+            "en": "Vila Nova de Paiva (Viseu)"
+          }
+        },
+        {
+          "value": "1061700",
+          "label": {
+            "en": "Vila Nova de Poiares (Coimbra)"
+          }
+        },
+        {
+          "value": "1171300",
+          "label": {
+            "en": "Vila Pouca de Aguiar (Vila Real)"
+          }
+        },
+        {
+          "value": "1171400",
+          "label": {
+            "en": "Vila Real (Vila Real)"
+          }
+        },
+        {
+          "value": "1081600",
+          "label": {
+            "en": "Vila Real de Santo António (Faro)"
+          }
+        },
+        {
+          "value": "1051100",
+          "label": {
+            "en": "Vila Velha de Rodão (Castelo Branco)"
+          }
+        },
+        {
+          "value": "1031300",
+          "label": {
+            "en": "Vila Verde (Braga)"
+          }
+        },
+        {
+          "value": "1071400",
+          "label": {
+            "en": "Vila Viçosa (Évora)"
+          }
+        },
+        {
+          "value": "1041100",
+          "label": {
+            "en": "Vimioso (Bragança)"
+          }
+        },
+        {
+          "value": "1041200",
+          "label": {
+            "en": "Vinhais (Bragança)"
+          }
+        },
+        {
+          "value": "1182300",
+          "label": {
+            "en": "Viseu (Viseu)"
+          }
+        },
+        {
+          "value": "1031400",
+          "label": {
+            "en": "Vizela (Braga)"
+          }
+        },
+        {
+          "value": "1182400",
+          "label": {
+            "en": "Vouzela (Viseu)"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "extra_locations",
+      "type": "string",
+      "label": {
+        "en": "Other locations",
+        "fr": "Autres lieux",
+        "de": "Weitere Orte",
+        "es": "Otros lugares"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Optional: more IPMA locations, separated by commas, one device each (10 locations in all).",
+        "fr": "Facultatif : d’autres lieux IPMA, séparés par des virgules, un appareil chacun (10 lieux en tout).",
+        "de": "Optional: weitere IPMA-Orte, durch Kommas getrennt, je ein Gerät (insgesamt 10 Orte).",
+        "es": "Opcional: otros lugares IPMA, separados por comas, un dispositivo cada uno (10 lugares en total)."
+      },
+      "placeholder": {
+        "en": "e.g. Funchal, Lagoa (Faro)",
+        "fr": "ex. Funchal, Lagoa (Faro)",
+        "de": "z. B. Funchal, Lagoa (Faro)",
+        "es": "p. ej. Funchal, Lagoa (Faro)"
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": ""
+    },
+    {
+      "key": "refresh_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Fréquence de mise à jour",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often IPMA is read. Its stations report once an hour.",
+        "fr": "Fréquence de lecture de l’IPMA. Ses stations publient une fois par heure.",
+        "de": "Wie oft das IPMA gelesen wird. Seine Stationen melden einmal pro Stunde.",
+        "es": "Frecuencia de lectura del IPMA. Sus estaciones publican una vez por hora."
+      },
+      "required": false,
+      "default": "30",
+      "options": [
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 hour",
+            "fr": "1 heure",
+            "de": "1 Stunde",
+            "es": "1 hora"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names and texts",
+        "fr": "Langue des noms et des textes",
+        "de": "Sprache der Namen und Texte",
+        "es": "Idioma de los nombres y textos"
+      },
+      "description": {
+        "en": "Feature names of new devices, weather and warning texts, scene variables.",
+        "fr": "Noms des fonctionnalités des nouveaux appareils, textes du temps et des avertissements, variables de scène.",
+        "de": "Funktionsnamen neuer Geräte, Wetter- und Warntexte, Szenenvariablen.",
+        "es": "Nombres de las funciones de los nuevos dispositivos, textos del tiempo y de los avisos, variables de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "nearest_location",
+      "label": {
+        "en": "Use the location nearest to a house",
+        "fr": "Utiliser le lieu le plus proche d’une maison",
+        "de": "Ort nächst einem Haus verwenden",
+        "es": "Usar el lugar más cercano a una casa"
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
+          "key": "house",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "source": "houses",
+          "label": {
+            "en": "House",
+            "fr": "Maison",
+            "de": "Haus",
+            "es": "Casa"
+          },
           "required": true
         }
       ]
+    },
+    {
+      "key": "check",
+      "label": {
+        "en": "Check IPMA now",
+        "fr": "Tester l’IPMA maintenant",
+        "de": "IPMA jetzt prüfen",
+        "es": "Comprobar el IPMA ahora"
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "warning_issued",
+      "label": {
+        "en": "IPMA weather warning issued",
+        "fr": "Avertissement météo IPMA émis",
+        "de": "IPMA-Wetterwarnung ausgegeben",
+        "es": "Aviso meteorológico IPMA emitido"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "IPMA issued a yellow, orange or red warning for a location, often the day before it starts. A warning raised to a higher level fires again.",
+        "fr": "L’IPMA a émis un avertissement jaune, orange ou rouge pour un lieu, souvent la veille de son début. Un avertissement relevé d’un niveau se déclenche à nouveau.",
+        "de": "Das IPMA hat eine gelbe, orange oder rote Warnung für einen Ort ausgegeben, oft am Vortag. Eine auf eine höhere Stufe angehobene Warnung löst erneut aus.",
+        "es": "El IPMA ha emitido un aviso amarillo, naranja o rojo para un lugar, a menudo la víspera de su inicio. Un aviso elevado de nivel se vuelve a activar."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Location",
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Lugar"
+          }
         },
         {
-          "key": "target",
+          "key": "level",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Levels",
+            "fr": "Niveaux",
+            "de": "Stufen",
+            "es": "Niveles"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "yellow",
+              "label": {
+                "en": "Yellow",
+                "fr": "Jaune",
+                "de": "Gelb",
+                "es": "Amarillo"
+              }
+            },
+            {
+              "value": "orange",
+              "label": {
+                "en": "Orange",
+                "fr": "Orange",
+                "de": "Orange",
+                "es": "Naranja"
+              }
+            },
+            {
+              "value": "red",
+              "label": {
+                "en": "Red",
+                "fr": "Rouge",
+                "de": "Rot",
+                "es": "Rojo"
+              }
+            }
+          ]
+        },
+        {
+          "key": "phenomenon",
+          "type": "multi_select",
+          "label": {
+            "en": "Phenomena",
+            "fr": "Phénomènes",
+            "de": "Phänomene",
+            "es": "Fenómenos"
+          },
+          "options": [
+            {
+              "value": "rain",
+              "label": {
+                "en": "Rain",
+                "fr": "Pluie",
+                "de": "Regen",
+                "es": "Lluvia"
+              }
+            },
+            {
+              "value": "thunderstorm",
+              "label": {
+                "en": "Thunderstorms",
+                "fr": "Orages",
+                "de": "Gewitter",
+                "es": "Tormentas"
+              }
+            },
+            {
+              "value": "wind",
+              "label": {
+                "en": "Wind",
+                "fr": "Vent",
+                "de": "Wind",
+                "es": "Viento"
+              }
+            },
+            {
+              "value": "coastal",
+              "label": {
+                "en": "Rough sea",
+                "fr": "Mer agitée",
+                "de": "Hoher Seegang",
+                "es": "Mar agitado"
+              }
+            },
+            {
+              "value": "heat",
+              "label": {
+                "en": "Hot weather",
+                "fr": "Fortes chaleurs",
+                "de": "Hitze",
+                "es": "Calor"
+              }
+            },
+            {
+              "value": "cold",
+              "label": {
+                "en": "Cold weather",
+                "fr": "Grand froid",
+                "de": "Kälte",
+                "es": "Frío"
+              }
+            },
+            {
+              "value": "snow",
+              "label": {
+                "en": "Snow",
+                "fr": "Neige",
+                "de": "Schnee",
+                "es": "Nieve"
+              }
+            },
+            {
+              "value": "fog",
+              "label": {
+                "en": "Fog",
+                "fr": "Brouillard",
+                "de": "Nebel",
+                "es": "Niebla"
+              }
+            },
+            {
+              "value": "other",
+              "label": {
+                "en": "Other",
+                "fr": "Autre",
+                "de": "Sonstiges",
+                "es": "Otro"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "location",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
-    }
-  ],
-  "scene_actions": [
-    {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
-      },
-      "timeout_seconds": 15,
-      "fields": [
+          "label": {
+            "en": "Location",
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Lugar"
+          }
+        },
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ],
-      "outputs": [
+          "key": "level",
+          "type": "string",
+          "label": {
+            "en": "Level (yellow, orange, red)",
+            "fr": "Niveau (yellow, orange, red)",
+            "de": "Stufe (yellow, orange, red)",
+            "es": "Nivel (yellow, orange, red)"
+          }
+        },
         {
-          "key": "signalled",
+          "key": "level_label",
+          "type": "string",
+          "label": {
+            "en": "Level, translated",
+            "fr": "Niveau, traduit",
+            "de": "Stufe, übersetzt",
+            "es": "Nivel, traducido"
+          }
+        },
+        {
+          "key": "phenomenon",
+          "type": "string",
+          "label": {
+            "en": "Phenomenon (key)",
+            "fr": "Phénomène (clé)",
+            "de": "Phänomen (Schlüssel)",
+            "es": "Fenómeno (clave)"
+          }
+        },
+        {
+          "key": "phenomenon_label",
+          "type": "string",
+          "label": {
+            "en": "Phenomenon, translated",
+            "fr": "Phénomène, traduit",
+            "de": "Phänomen, übersetzt",
+            "es": "Fenómeno, traducido"
+          }
+        },
+        {
+          "key": "starts_at",
+          "type": "string",
+          "label": {
+            "en": "Start (ISO date)",
+            "fr": "Début (date ISO)",
+            "de": "Beginn (ISO-Datum)",
+            "es": "Inicio (fecha ISO)"
+          }
+        },
+        {
+          "key": "ends_at",
+          "type": "string",
+          "label": {
+            "en": "End (ISO date)",
+            "fr": "Fin (date ISO)",
+            "de": "Ende (ISO-Datum)",
+            "es": "Fin (fecha ISO)"
+          }
+        },
+        {
+          "key": "active",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Already started",
+            "fr": "Déjà commencé",
+            "de": "Bereits begonnen",
+            "es": "Ya iniciado"
+          }
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "label": {
+            "en": "IPMA text (Portuguese)",
+            "fr": "Texte de l’IPMA (portugais)",
+            "de": "IPMA-Text (Portugiesisch)",
+            "es": "Texto del IPMA (portugués)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "forecast",
+      "label": {
+        "en": "IPMA forecast",
+        "fr": "Prévisions IPMA",
+        "de": "IPMA-Vorhersage",
+        "es": "Previsión IPMA"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Five-day forecast, current temperature, UV, fire risk and IPMA warnings of a location.",
+        "fr": "Prévisions à 5 jours, température actuelle, UV, risque d’incendie et avertissements IPMA d’un lieu.",
+        "de": "5-Tage-Vorhersage, aktuelle Temperatur, UV, Waldbrandgefahr und IPMA-Warnungen eines Ortes.",
+        "es": "Previsión a 5 días, temperatura actual, UV, riesgo de incendio y avisos IPMA de un lugar."
+      },
+      "icon": "cloud",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Location",
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Lugar"
+          },
+          "description": {
+            "en": "Empty: the first configured location.",
+            "fr": "Vide : le premier lieu configuré.",
+            "de": "Leer: der erste konfigurierte Ort.",
+            "es": "Vacío: el primer lugar configurado."
+          }
+        }
+      ]
     }
   ]
 }

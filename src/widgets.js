@@ -1,169 +1,229 @@
 // -----------------------------------------------------------------------------
-// Dashboard widgets (SDK v0.14+, Gladys 5.1+).
+// The `forecast` dashboard widget: one IPMA location at a glance.
 //
-// A widget puts the integration's own data on the Gladys dashboard without a
-// dedicated core widget. The manifest `widgets` field declares its identity
-// (key, label, icon, optional per-instance `settings`); at runtime the
-// integration returns a DECLARATIVE content — `text`, `value`, `gauge`,
-// `status`, `chart`, `card-list`, `image`, `button` — that the core renders
-// with its own theme, dark mode and translations. No HTML, no CSS.
+//   heading   IPMA · Aveiro
+//   caption   Station Aveiro (Universidade) · 23:00
+//   tiles     Now (live temperature) · UV index · Fire risk · Warnings
+//   card-list the warnings not over yet (active first), tap for IPMA's text
+//   status    5 days: weather (with its icon), min / max, chance of rain
 //
-// Each entry of WIDGETS is keyed by the widget `key` and exposes:
-//   - get(gladys, { settings, language, units, config }): the content,
-//     registered by index.js with `gladys.onWidgetGet(key, ...)`;
-//   - action(gladys, { actionKey, params, settings, config }) (optional): a
-//     tapped `button` carrying an `action`, registered with
-//     `gladys.onWidgetAction`.
-//
-// Check your contents in the tests with `validateWidgetContent` (exported by
-// the SDK, see test/widgets.test.js), or run with DEBUG=gladys-integration-sdk
-// to have the SDK log every violation of the vocabulary and the budget.
+// Eight components at most, two texts: the core's budget. Everything is
+// localized from the `language` of the request (the core caches a content
+// per language). The weather is told by the icon of each day; a choice is
+// never told by a button style (invisible in dark mode).
 // -----------------------------------------------------------------------------
 
-import {
-  createLogger,
-  DEVICE_FEATURE_CATEGORIES,
-  DEVICE_TRANSPORTS,
-  WIDGET_COLORS,
-} from '@gladysassistant/integration-sdk';
-import { identifyDevice } from './devices/index.js';
-import { weatherStation } from './devices/weatherStation.js';
-import { plug } from './devices/plug.js';
-import { light } from './devices/light.js';
+import { WIDGET_COLORS } from '@gladysassistant/integration-sdk';
+import { LEVELS, PHENOMENA, uvLevel, weatherType } from './codes.js';
+import { fireRiskLabel, locationIds } from './device.js';
+import { text } from './i18n.js';
+import { hasFireRisk } from './locations.js';
+import { localTime } from './time.js';
 
-const logger = createLogger({ name: 'widgets' });
+export const WIDGET_TTL_SECONDS = 600;
 
-// Widget key, as declared in the manifest `widgets` field.
-export const DEMO_STATUS_WIDGET = 'demo_status';
-
-// Keys of the `button` actions the demo_status content declares.
-const DEMO_STATUS_ACTIONS = { IDENTIFY_LIGHT: 'identify_light' };
-
-// How the plug transport reads in the status list.
-const TRANSPORT_STATUS = {
-  [DEVICE_TRANSPORTS.LOCAL]: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
-  [DEVICE_TRANSPORTS.CLOUD]: { value: { en: 'Cloud', fr: 'Cloud' }, color: WIDGET_COLORS.INFO },
-  [DEVICE_TRANSPORTS.UNREACHABLE]: {
-    value: { en: 'Unreachable', fr: 'Injoignable' },
-    color: WIDGET_COLORS.DANGER,
-  },
+const LEVEL_COLORS = {
+  green: WIDGET_COLORS.SUCCESS,
+  yellow: WIDGET_COLORS.WARNING,
+  orange: WIDGET_COLORS.DANGER,
+  red: WIDGET_COLORS.DANGER,
+};
+const UV_COLORS = {
+  low: WIDGET_COLORS.SUCCESS,
+  moderate: WIDGET_COLORS.WARNING,
+  high: WIDGET_COLORS.WARNING,
+  very_high: WIDGET_COLORS.DANGER,
+  extreme: WIDGET_COLORS.DANGER,
+};
+const FIRE_COLORS = {
+  1: WIDGET_COLORS.SUCCESS,
+  2: WIDGET_COLORS.WARNING,
+  3: WIDGET_COLORS.WARNING,
+  4: WIDGET_COLORS.DANGER,
+  5: WIDGET_COLORS.DANGER,
 };
 
-// A live tile references a feature by its external_id: read it from the
-// discovery payload itself, so the widget and the device never disagree.
-function featureExternalId(gladys, config, blueprint, category) {
-  const device = blueprint.buildDevice(gladys, config);
-  return device.features.find((feature) => feature.category === category).external_id;
-}
+const languageOf = (language) => (['en', 'fr', 'de', 'es'].includes(language) ? language : 'en');
 
-function plugConnectionStatus(gladys, config) {
-  const { transport, degraded } = plug.transport(gladys, config);
-  const { value, color } = TRANSPORT_STATUS[transport];
-  if (degraded) {
-    return {
-      value: { en: `${value.en} (degraded mode)`, fr: `${value.fr} (mode dégradé)` },
-      color: WIDGET_COLORS.WARNING,
-    };
+/** "Thu 28" in the language of the request, for a calendar date. */
+function dayLabel(isoDate, index, language) {
+  if (index === 0) {
+    return text('today', language);
   }
-  return { value, color };
+  if (index === 1) {
+    return text('tomorrow', language);
+  }
+  // Composed here: ICU orders weekday and day differently per language.
+  const date = new Date(`${isoDate}T12:00:00Z`);
+  const weekday = new Intl.DateTimeFormat(language, { timeZone: 'UTC', weekday: 'short' }).format(
+    date,
+  );
+  return `${weekday} ${date.getUTCDate()}`;
 }
 
-export const WIDGETS = {
-  [DEMO_STATUS_WIDGET]: {
-    // `settings` holds the per-instance values of the declared `settings`
-    // (none here); `language` and `units` are those of the user viewing the
-    // dashboard, for the values you format yourself. Multi-language objects
-    // (`{ en, fr }`) are picked by the core, like everywhere else.
-    async get(gladys, { config }) {
-      logger.debug(`onWidgetGet <- ${DEMO_STATUS_WIDGET}`);
-      return {
-        // Reload policy: the computed parts below only change with the
-        // config, and index.js nudges the widget on every (re)connection and
-        // config update (see refreshWidgets) — the TTL is just a safety net.
-        ttl_seconds: 300,
-        components: [
-          // Device-bound tiles: LIVE, they follow the published states over
-          // the core's real-time path. No TTL, no nudge involved.
-          {
-            type: 'value',
-            label: { en: 'Temperature', fr: 'Température' },
-            icon: 'thermometer',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              weatherStation,
-              DEVICE_FEATURE_CATEGORIES.TEMPERATURE_SENSOR,
-            ),
-          },
-          {
-            type: 'value',
-            label: { en: 'Office plug', fr: 'Prise du bureau' },
-            icon: 'zap',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              plug,
-              DEVICE_FEATURE_CATEGORIES.ENERGY_SENSOR,
-            ),
-          },
-          // Computed rows: what the integration knows that no device feature
-          // carries. Served from the core cache until the TTL or a nudge.
-          {
-            type: 'status',
-            items: [
-              {
-                label: { en: 'Plug connection', fr: 'Connexion de la prise' },
-                icon: 'wifi',
-                ...plugConnectionStatus(gladys, config),
-              },
-              {
-                label: { en: 'Observed location', fr: 'Position observée' },
-                icon: 'map-pin',
-                value: `${config.latitude.toFixed(2)}, ${config.longitude.toFixed(2)}`,
-                color: WIDGET_COLORS.NEUTRAL,
-              },
-            ],
-          },
-          // `params` are declared HERE and sent back as-is: the handler never
-          // receives user input (a dashboard can hang on a public wall).
-          {
-            type: 'button',
-            label: { en: 'Identify the light', fr: 'Identifier la lampe' },
-            icon: 'eye',
-            style: 'secondary',
-            action: {
-              key: DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT,
-              params: { device: light.deviceExternalId(gladys) },
-            },
-          },
-        ],
-      };
-    },
+const degrees = (value) => (value === null ? '–' : `${Math.round(value)}°`);
 
-    // Resolve an optional toast (string or multi-language object, ≤ 200
-    // characters). After a successful action the core drops the cached
-    // content and every open dashboard refetches it: no nudge needed.
-    async action(gladys, { actionKey, params, config }) {
-      logger.info(`onWidgetAction <- ${DEMO_STATUS_WIDGET}.${actionKey}`);
-      if (actionKey === DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT) {
-        return identifyDevice(gladys, params.device, config);
-      }
-      // Throwing acks the action as failed: the message reaches the user.
-      throw new Error(`Unknown widget action: ${actionKey}`);
-    },
-  },
-};
+/** "28/07 09:00" in the local time of the place. */
+function dateTime(date, timeZone, language) {
+  return new Intl.DateTimeFormat(language, {
+    timeZone,
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(date);
+}
 
 /**
- * Freshness nudge: ask the core to re-pull every widget NOW instead of
- * waiting for the content TTL. Call it when you KNOW a computed content
- * changed (here: the config, which drives the plug transport and the observed
- * location) — and after every (re)connection, since the nudges are
- * fire-and-forget: rate-limited core-side to 1 per 10 s per widget, dropped
- * silently while disconnected.
+ * @param {object} input
+ * @param {object} input.gladys GladysIntegration (for the feature external ids)
+ * @param {import('./locations.js').Location} input.location
+ * @param {object|null} input.snapshot
+ * @param {string} input.language
  */
-export function refreshWidgets(gladys) {
-  for (const key of Object.keys(WIDGETS)) {
-    gladys.requestWidgetRefresh(key);
+export function buildForecastContent({ gladys, location, snapshot, language: requested }) {
+  const language = languageOf(requested);
+  const components = [{ type: 'text', variant: 'heading', text: `IPMA · ${location.name}` }];
+  // Nothing could be read yet: a sentence, never an empty card.
+  const empty =
+    !snapshot ||
+    (snapshot.days.length === 0 && !snapshot.observation && snapshot.warnings === null);
+  if (empty) {
+    return { ttl_seconds: 60, components: [...components, unavailableText(language)] };
   }
+
+  const observation = snapshot.observation;
+  if (observation) {
+    components.push({
+      type: 'text',
+      variant: 'caption',
+      text: `${text('station', language)} ${observation.station.name} · ${localTime(
+        observation.time,
+        location.timeZone,
+      )}`,
+    });
+  } else if (snapshot.forecastUpdatedAt) {
+    components.push({
+      type: 'text',
+      variant: 'caption',
+      text: `${text('updated', language)} ${snapshot.forecastUpdatedAt.slice(11, 16)}`,
+    });
+  }
+
+  // Tiles: the live temperature follows the published states.
+  const ids = locationIds(gladys, location);
+  components.push({
+    type: 'value',
+    label: text('now', language),
+    icon: 'thermometer',
+    device_feature: ids.feature('temperature'),
+  });
+  if (snapshot.uv !== null) {
+    const uv = Math.round(snapshot.uv);
+    components.push({
+      type: 'value',
+      label: text('uv', language),
+      icon: 'sun',
+      value: uv,
+      color: UV_COLORS[uvLevel(uv).key],
+    });
+  }
+  if (hasFireRisk(location) && snapshot.fireRisk !== null) {
+    components.push({
+      type: 'value',
+      label: text('fire', language),
+      icon: 'alert-triangle',
+      value: fireRiskLabel(snapshot.fireRisk, language),
+      color: FIRE_COLORS[snapshot.fireRisk],
+    });
+  }
+  if (snapshot.warnings !== null) {
+    const level = Object.keys(LEVELS).find((key) => LEVELS[key].value === snapshot.warningLevel);
+    components.push({
+      type: 'value',
+      label: text('warning', language),
+      icon: snapshot.warningLevel > 0 ? 'alert-octagon' : 'check-circle',
+      value: LEVELS[level][language],
+      color: LEVEL_COLORS[level],
+    });
+  }
+
+  // Focal: the warnings, when there are some.
+  if (snapshot.warnings && snapshot.warnings.length > 0) {
+    components.push({
+      type: 'card-list',
+      display: 'list',
+      items: snapshot.warnings.slice(0, 8).map((warning) => {
+        const period = `${dateTime(warning.startsAt, location.timeZone, language)} → ${dateTime(
+          warning.endsAt,
+          location.timeZone,
+          language,
+        )}`;
+        return {
+          title: `${LEVELS[warning.level][language]} · ${PHENOMENA[warning.phenomenon][language]}`,
+          subtitle: period,
+          badge: {
+            text: text(warning.active ? 'ongoing' : 'upcoming', language),
+            color: LEVEL_COLORS[warning.level],
+          },
+          // IPMA writes its warnings in Portuguese.
+          ...(warning.text ? { description: `${warning.text}\n\n${period}` } : {}),
+        };
+      }),
+    });
+  }
+
+  if (snapshot.days.length > 0) {
+    components.push({
+      type: 'status',
+      items: snapshot.days.map((day, index) => {
+        const type = weatherType(day.weatherType);
+        const rain = day.rainProbability === null ? '' : ` · ${Math.round(day.rainProbability)} %`;
+        return {
+          label: `${dayLabel(day.date, index, language)} · ${type[language]}`,
+          value: `${degrees(day.min)} / ${degrees(day.max)}${rain}`,
+          icon: type.icon,
+          color:
+            day.rainProbability !== null && day.rainProbability >= 50
+              ? WIDGET_COLORS.INFO
+              : WIDGET_COLORS.NEUTRAL,
+        };
+      }),
+    });
+  }
+  return { ttl_seconds: WIDGET_TTL_SECONDS, components };
+}
+
+function unavailableText(language) {
+  return {
+    type: 'text',
+    variant: 'body',
+    text: {
+      en: 'IPMA does not answer for now: the forecast will show up at the next refresh.',
+      fr: 'L’IPMA ne répond pas pour l’instant : les prévisions apparaîtront au prochain rafraîchissement.',
+      de: 'IPMA antwortet gerade nicht: Die Vorhersage erscheint bei der nächsten Aktualisierung.',
+      es: 'El IPMA no responde por ahora: la previsión aparecerá en la próxima actualización.',
+    }[language],
+  };
+}
+
+/** Content of a widget whose integration has no location yet. */
+export function notConfiguredContent(language) {
+  return {
+    ttl_seconds: 60,
+    components: [
+      { type: 'text', variant: 'heading', text: 'IPMA' },
+      {
+        type: 'text',
+        variant: 'body',
+        text: {
+          en: 'Choose a location in the configuration of the IPMA integration, then add its device.',
+          fr: 'Choisissez un lieu dans la configuration de l’intégration IPMA, puis ajoutez son appareil.',
+          de: 'Wähle einen Ort in der Konfiguration der IPMA-Integration und füge dann sein Gerät hinzu.',
+          es: 'Elija un lugar en la configuración de la integración IPMA y luego añada su dispositivo.',
+        }[languageOf(language)],
+      },
+    ],
+  };
 }

@@ -1,6 +1,6 @@
 {
   "name": "gladys-ipma",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Gladys Assistant integration: the official weather of Portugal from IPMA (forecasts, stations, warnings, UV, fire risk).",
   "type": "module",

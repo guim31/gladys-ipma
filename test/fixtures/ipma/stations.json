@@ -1,0 +1,10 @@
+[
+  {"geometry": {"type": "Point", "coordinates": [-8.6501, 40.6402]}, "type": "Feature", "properties": {"idEstacao": 1210907, "localEstacao": "Aveiro (Porto)"}},
+  {"geometry": {"type": "Point", "coordinates": [-8.6590, 40.6345]}, "type": "Feature", "properties": {"idEstacao": 1210702, "localEstacao": "Aveiro (Universidade)"}},
+  {"geometry": {"type": "Point", "coordinates": [-8.6780, 41.2330]}, "type": "Feature", "properties": {"idEstacao": 1200545, "localEstacao": "Porto, Pedras Rubras"}},
+  {"geometry": {"type": "Point", "coordinates": [-9.1497, 38.7192]}, "type": "Feature", "properties": {"idEstacao": 1200535, "localEstacao": "Lisboa (Geofísico)"}},
+  {"geometry": {"type": "Point", "coordinates": [-7.9680, 37.0170]}, "type": "Feature", "properties": {"idEstacao": 1200554, "localEstacao": "Faro (Aeroporto)"}},
+  {"geometry": {"type": "Point", "coordinates": [-16.8920, 32.6460]}, "type": "Feature", "properties": {"idEstacao": 1200548, "localEstacao": "Funchal"}},
+  {"geometry": {"type": "Point", "coordinates": [-7.8200, 37.0300]}, "type": "Feature", "properties": {"idEstacao": 1210881, "localEstacao": "Olhão"}},
+  {"geometry": {"type": "Point", "coordinates": [-25.6680, 37.7410]}, "type": "Feature", "properties": {"idEstacao": 1210999, "localEstacao": "Ponta Delgada"}}
+]

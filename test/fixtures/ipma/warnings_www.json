@@ -1,0 +1,12 @@
+[
+  {"text": "", "awarenessTypeName": "Precipitação", "idAreaAviso": "AVR", "startTime": "2022-07-28T00:00:00", "awarenessLevelID": "green", "endTime": "2022-07-29T23:59:00"},
+  {"text": "Persistência de valores elevados da temperatura máxima.", "awarenessTypeName": "Tempo Quente", "idAreaAviso": "AVR", "startTime": "2022-07-28T09:00:00", "awarenessLevelID": "yellow", "endTime": "2022-07-28T18:00:00"},
+  {"text": "Ondas de noroeste com 4 a 5 metros.", "awarenessTypeName": "Agitação Marítima", "idAreaAviso": "AVR", "startTime": "2022-07-29T06:00:00", "awarenessLevelID": "orange", "endTime": "2022-07-29T21:00:00"},
+  {"text": "Nevoeiro persistente.", "awarenessTypeName": "Nevoeiro", "idAreaAviso": "AVR", "startTime": "2022-07-28T03:00:00", "awarenessLevelID": "yellow", "endTime": "2022-07-28T09:00:00"},
+  {"text": "", "awarenessTypeName": "Vento", "idAreaAviso": "AVR", "startTime": "2022-07-28T00:00:00", "awarenessLevelID": "green", "endTime": "2022-07-29T23:59:00"},
+  {"text": "Na costa Sul, ondas de sueste com 2 a 2,5 metros, em especial no barlavento.", "awarenessTypeName": "Agitação Marítima", "idAreaAviso": "FAR", "startTime": "2022-07-28T12:24:00", "awarenessLevelID": "yellow", "endTime": "2022-07-30T06:00:00"},
+  {"text": "Chuva forte", "awarenessTypeName": "Precipitação", "idAreaAviso": "BRG", "startTime": "2022-07-28T06:00:00", "awarenessLevelID": "yellow", "endTime": "2022-07-28T18:00:00"},
+  {"text": "Vento forte", "awarenessTypeName": "Vento", "idAreaAviso": "LSB", "startTime": "2022-07-28T08:00:00", "awarenessLevelID": "orange", "endTime": "2022-07-28T20:00:00"},
+  {"text": "Aguaceiros fortes e trovoada.", "awarenessTypeName": "Trovoada", "idAreaAviso": "AOR", "startTime": "2022-07-28T10:00:00", "awarenessLevelID": "red", "endTime": "2022-07-28T15:00:00"},
+  {"text": "", "awarenessTypeName": "Tempo Frio", "idAreaAviso": "GDA", "startTime": "2022-07-28T00:00:00", "awarenessLevelID": "green", "endTime": "2022-07-29T23:59:00"}
+]

@@ -1,77 +1,131 @@
+// -----------------------------------------------------------------------------
+// The `forecast` widget: rendered exactly as sent (the SDK's validator mirrors
+// the core's vocabulary and budget), in every language, and its live tile
+// points at a feature that exists.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { WEATHER_TYPES } from '../src/codes.js';
+import { TEXT } from '../src/i18n.js';
+import { notConfiguredContent } from '../src/widgets.js';
+import { NOW, createWorld, featureId, fixture, ipmaRoutes } from './helpers/world.js';
+import { ENDPOINTS } from '../src/ipma.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+const LANGS = ['en', 'fr', 'de', 'es'];
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+async function content(world, settings = {}, language = 'en') {
+  const ack = await world.fake.widgetGet('forecast', { settings, language });
+  assert.equal(ack.success, true, ack.error);
+  return ack.data.content;
+}
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
-
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
-    );
-  } finally {
-    simulateLanSession(true);
+test('the widget fits the core’s budget, in every language', async () => {
+  const world = await createWorld({ config: { location: '1010500', extra_locations: 'Horta' } });
+  for (const language of LANGS) {
+    for (const device of world.fake.discoveredDevices) {
+      const widget = await content(world, { device: device.external_id }, language);
+      assert.deepEqual(validateWidgetContent(widget), [], `${device.name} in ${language}`);
+    }
   }
+  world.app.stop();
 });
 
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('Aveiro: live temperature, UV, fire risk, warnings and five days', async () => {
+  const world = await createWorld();
+  const widget = await content(world, {}, 'fr');
+  const byType = (type) => widget.components.filter((component) => component.type === type);
+  assert.deepEqual(
+    byType('text').map((component) => component.text),
+    ['IPMA · Aveiro', 'Station Aveiro (Porto) · 11:00'],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
-});
-
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
-
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+  const tiles = byType('value');
+  assert.deepEqual(
+    tiles.map((tile) => [tile.label, tile.value ?? tile.device_feature]),
+    [
+      ['Maintenant', featureId(1010500, 'temperature')],
+      ['Indice UV', 8],
+      ['Risque d’incendie', 'Modéré'],
+      ['Avertissements', 'Jaune'],
+    ],
   );
+  // The live tile points at a feature of the device Gladys knows.
+  const features = world.fake.discoveredDevices[0].features.map((feature) => feature.external_id);
+  assert.ok(features.includes(tiles[0].device_feature));
+
+  const [warnings] = byType('card-list');
+  assert.deepEqual(
+    warnings.items.map((item) => [item.title, item.badge.text]),
+    [
+      ['Jaune · Fortes chaleurs', 'En cours'],
+      ['Orange · Mer agitée', 'À venir'],
+    ],
+  );
+  assert.match(warnings.items[0].description, /^Persistência de valores elevados/);
+
+  const [days] = byType('status');
+  assert.equal(days.items.length, 5);
+  assert.deepEqual(days.items[0], {
+    label: 'Aujourd’hui · Peu nuageux',
+    value: '16° / 23° · 0 %',
+    icon: 'sun',
+    color: 'neutral',
+  });
+  world.app.stop();
 });
 
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('no warning: no list, a green tile', async () => {
+  const warnings = fixture('warnings_www.json').filter((warning) => warning.idAreaAviso !== 'AVR');
+  const world = await createWorld({
+    routes: new Map([...ipmaRoutes(), [ENDPOINTS.warnings, warnings]]),
+  });
+  const widget = await content(world, {}, 'de');
+  assert.equal(widget.components.filter((component) => component.type === 'card-list').length, 0);
+  const tile = widget.components.find((component) => component.label === 'Warnungen');
+  assert.deepEqual([tile.value, tile.color, tile.icon], ['Keine', 'success', 'check-circle']);
+  world.app.stop();
+});
+
+test('IPMA unreachable, nothing configured: a sentence, never an error', async () => {
+  const down = await createWorld({ routes: new Map() });
+  const widget = await content(down, {}, 'es');
+  assert.deepEqual(validateWidgetContent(widget), []);
+  assert.deepEqual(
+    widget.components.map((component) => component.text),
+    [
+      'IPMA · Aveiro',
+      'El IPMA no responde por ahora: la previsión aparecerá en la próxima actualización.',
+    ],
+  );
+  assert.equal(widget.ttl_seconds, 60);
+  down.app.stop();
+
+  const empty = await createWorld({ config: {} });
+  const none = await content(empty, {}, 'es');
+  assert.deepEqual(none, notConfiguredContent('es'));
+  assert.deepEqual(validateWidgetContent(none), []);
+  empty.app.stop();
+});
+
+test('a status row holds a day and any weather type (40 characters)', () => {
+  for (const lang of LANGS) {
+    // "Today", "Tomorrow", or a weekday and a day: "mer. 31".
+    const longestDay = Math.max(TEXT.today[lang].length, TEXT.tomorrow[lang].length, 7);
+    for (const [id, type] of Object.entries(WEATHER_TYPES)) {
+      const label = `${'x'.repeat(longestDay)} · ${type[lang]}`;
+      assert.ok(label.length <= 40, `weather ${id} in ${lang}: "${label}"`);
+    }
+  }
+});
+
+test('the day labels are localized', async () => {
+  const world = await createWorld({ now: () => NOW });
+  const widget = await content(world, {}, 'en');
+  const [days] = widget.components.filter((component) => component.type === 'status');
+  assert.deepEqual(
+    days.items.map((item) => item.label.split(' · ')[0]),
+    ['Today', 'Tomorrow', 'Sat 30', 'Sun 31', 'Mon 1'],
+  );
+  world.app.stop();
 });

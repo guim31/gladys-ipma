@@ -37,7 +37,7 @@ The full user documentation, re-hosted by Gladys, is in [`docs/`](docs/en.md)
 
 ## Requirements
 
-- Gladys **5.2.0** or later (the house select of the "nearest location" button).
+- Gladys **5.3.0** or later (catalog countries; 5.2.0 for the house select of the "nearest location" button).
 - Internet access from Gladys to `api.ipma.pt` (HTTPS).
 
 ## Installation

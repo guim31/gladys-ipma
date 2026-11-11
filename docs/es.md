@@ -31,7 +31,7 @@ Todo es de solo lectura: nada en Gladys puede cambiar nada en el IPMA.
 
 ## Requisitos
 
-- Gladys **5.2.0** o posterior.
+- Gladys **5.3.0** o posterior.
 - Acceso a Internet de Gladys hacia `api.ipma.pt` (HTTPS).
 - Nada más: ni cuenta, ni clave.
 

@@ -33,7 +33,7 @@ Tout est en lecture seule : rien dans Gladys ne peut modifier quoi que ce soit �
 
 ## Prérequis
 
-- Gladys **5.2.0** ou plus récent.
+- Gladys **5.3.0** ou plus récent.
 - Un accès Internet de Gladys vers `api.ipma.pt` (HTTPS).
 - Rien d’autre : ni compte, ni clé.
 

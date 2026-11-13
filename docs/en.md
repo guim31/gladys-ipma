@@ -29,7 +29,7 @@ Everything is read only: nothing in Gladys can change anything at IPMA.
 
 ## Requirements
 
-- Gladys **5.2.0** or later.
+- Gladys **5.3.0** or later.
 - Internet access from Gladys to `api.ipma.pt` (HTTPS).
 - Nothing else: no account, no key.
 
